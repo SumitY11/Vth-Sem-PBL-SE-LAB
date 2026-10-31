@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}Emergency SOS Trigger - Women Safety Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+
+        <!-- Emergency Alert Banner -->
+        <div class="alert alert-danger shadow-sm border-0 d-flex align-items-center mb-4 p-3" role="alert">
+            <i class="fa-solid fa-triangle-exclamation fs-3 me-3 text-danger"></i>
+            <div>
+                <strong class="d-block fs-6">EMERGENCY SOS COMMAND CENTER</strong>
+                <span class="small text-danger-emphasis">
+                    Pressing the trigger button will immediately record your alert, capture your live GPS coordinates, and broadcast an emergency alert to your {{ contacts|length }} trusted contacts.
+                </span>
+            </div>
+        </div>
+
+        <!-- Main SOS Trigger Box -->
+        <div class="card shadow-sm border-0 text-center mb-4">
+            <div class="card-body p-4 p-md-5">
+
+                <div class="my-3">
+                    <button id="sosTriggerBtn" type="button" class="sos-big-trigger-btn shadow-lg mx-auto">
+                        <i class="fa-solid fa-bullhorn fs-1 mb-2 animate-bounce"></i>
+                        <span class="fs-4">SEND SOS</span>
+                        <span style="font-size: 0.75rem; letter-spacing: 0.05em; opacity: 0.85;">ONE-TAP DISPATCH</span>
+                    </button>
+                </div>
+
+                <div class="mt-4">
+                    <p class="text-muted small mb-1">Status of Geolocation Sensor:</p>
+                    <div id="geoStatusBadge" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2 fs-7">
+                        <i class="fa-solid fa-spinner fa-spin me-1" id="geoSpinner"></i>
+                        <span id="geoStatusText">Acquiring live browser coordinates...</span>
+                    </div>
+                </div>
+
+                <!-- Live Coordinate Display (Hidden until determined) -->
+                <div id="geoDetailsCard" class="card bg-light border-0 mt-3 p-3 text-start small mx-auto" style="max-width: 480px; display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold"><i class="fa-solid fa-location-crosshairs text-primary me-1"></i> Location Telemetry</span>
+                        <span id="geoAccuracyBadge" class="badge bg-success-subtle text-success border">High Accuracy</span>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <span class="text-muted">Latitude:</span> <strong id="displayLat">-</strong>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted">Longitude:</span> <strong id="displayLng">-</strong>
+                        </div>
+                    </div>
+                    <div id="mapsPreviewLink" class="mt-2 text-end" style="display: none;">
+                        <a href="#" target="_blank" id="mapsLinkTag" class="text-danger small fw-semibold text-decoration-none">
+                            <i class="fa-solid fa-map-pin me-1"></i> Preview Location on Map
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Fallback Alert Box (Shown if location denied or unavailable) -->
+                <div id="geoFallbackAlert" class="alert alert-warning border-0 mt-3 text-start small mx-auto" style="max-width: 480px; display: none;">
+                    <div class="d-flex align-items-start">
+                        <i class="fa-solid fa-circle-exclamation fs-5 text-warning me-2 mt-1"></i>
+                        <div>
+                            <strong>GPS Unavailable / Denied:</strong>
+                            <p class="mb-0 text-muted" id="fallbackMessage">
+                                Falling back to network/manual incident dispatch. Your alert will still be sent immediately with your account profile and any notes below.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Emergency Notes / Landmark Input -->
+                <div class="mt-4 text-start mx-auto" style="max-width: 480px;">
+                    <label for="emergencyNotes" class="form-label small fw-semibold text-muted">
+                        Emergency Note / Last Known Landmark <span class="fw-normal">(Optional fallback)</span>
+                    </label>
+                    <input type="text" id="emergencyNotes" class="form-control form-control-sm" placeholder="e.g., Near Bus Terminal gate 3, wearing blue jacket">
+                </div>
+
+                <!-- Hidden Form for Standard Form Submission Fallback -->
+                <form id="sosFormFallback" method="POST" action="{{ url_for('sos') }}" style="display: none;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="latitude" id="formLat" value="">
+                    <input type="hidden" name="longitude" id="formLng" value="">
+                    <input type="hidden" name="accuracy" id="formAcc" value="">
+                    <input type="hidden" name="location_status" id="formLocationStatus" value="UNKNOWN">
+                    <input type="hidden" name="emergency_notes" id="formNotes" value="">
+                </form>
+
+            </div>
+        </div>
+
+        <!-- Real-Time Alert Dispatch Feedback Modal / Card -->
+        <div id="dispatchResultCard" class="card shadow-sm border-0 mb-4" style="display: none;">
+            <div class="card-header bg-danger text-white py-3 d-flex justify-content-between align-items-center">
+                <span class="fw-bold"><i class="fa-solid fa-tower-broadcast me-2"></i> EMERGENCY DISPATCH REPORT</span>
+                <span class="badge bg-white text-danger fw-bold">ACTIVE INCIDENT</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="alert alert-success d-flex align-items-center mb-3">
+                    <i class="fa-solid fa-check-circle fs-3 me-3 text-success"></i>
+                    <div>
+                        <strong class="d-block" id="dispatchSuccessTitle">Emergency SOS Broadcast Dispatched!</strong>
+                        <span class="small" id="dispatchSuccessMsg">Recorded in database. Contact notification simulation executed.</span>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold text-uppercase small text-muted mb-2">Simulated Notification Broadcast:</h6>
+                <div id="dispatchContactsList" class="list-group list-group-flush border rounded mb-3 small">
+                    <!-- Populated dynamically via JS -->
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fa-solid fa-gauge me-1"></i> Return to Dashboard
+                    </a>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="location.reload();">
+                        <i class="fa-solid fa-rotate-right me-1"></i> Refresh Status
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registered Recipients Card -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0"><i class="fa-solid fa-users-viewfinder text-primary me-2"></i>Configured Emergency Recipients ({{ contacts|length }})</h6>
+            </div>
+            <div class="card-body p-0">
+                {% if contacts %}
+                    <ul class="list-group list-group-flush small">
+                        {% for c in contacts %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                                <div>
+                                    <span class="fw-semibold">{{ c.contact_name }}</span>
+                                    <span class="badge bg-light text-muted border ms-1">{{ c.relationship }}</span>
+                                </div>
+                                <span class="text-muted"><i class="fa-solid fa-phone me-1"></i>{{ c.contact_phone }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="p-3 text-center text-muted small">
+                        <i class="fa-solid fa-triangle-exclamation text-warning me-1"></i>
+                        No trusted contacts registered! Alerts will only be logged in your incident history.
+                        <a href="{{ url_for('trusted_contacts') }}" class="fw-semibold ms-1">Add Contacts</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Geolocation telemetry state
+    let telemetry = {
+        latitude: null,
+        longitude: null,
+        accuracy: null,
+        status: "PENDING"
+    };
+
+    const csrfToken = "{{ csrf_token() }}";
+    const geoStatusBadge = document.getElementById("geoStatusBadge");
+    const geoSpinner = document.getElementById("geoSpinner");
+    const geoStatusText = document.getElementById("geoStatusText");
+    const geoDetailsCard = document.getElementById("geoDetailsCard");
+    const geoFallbackAlert = document.getElementById("geoFallbackAlert");
+    const fallbackMessage = document.getElementById("fallbackMessage");
+    const displayLat = document.getElementById("displayLat");
+    const displayLng = document.getElementById("displayLng");
+    const mapsPreviewLink = document.getElementById("mapsPreviewLink");
+    const mapsLinkTag = document.getElementById("mapsLinkTag");
+
+    const sosTriggerBtn = document.getElementById("sosTriggerBtn");
+    const emergencyNotesInput = document.getElementById("emergencyNotes");
+    const dispatchResultCard = document.getElementById("dispatchResultCard");
+    const dispatchContactsList = document.getElementById("dispatchContactsList");
+
+    // Form fallback elements
+    const sosFormFallback = document.getElementById("sosFormFallback");
+    const formLat = document.getElementById("formLat");
+    const formLng = document.getElementById("formLng");
+    const formAcc = document.getElementById("formAcc");
+    const formLocationStatus = document.getElementById("formLocationStatus");
+    const formNotes = document.getElementById("formNotes");
+
+    // Initiate Geolocation acquisition
+    function acquireLocation() {
+        if (!navigator.geolocation) {
+            handleLocationError({
+                code: 0,
+                message: "Browser does not support HTML5 Geolocation API."
+            }, "UNSUPPORTED");
+            return;
+        }
+
+        const geoOptions = {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        };
+
+        navigator.geolocation.getCurrentPosition(
+            handleLocationSuccess,
+            handleLocationError,
+            geoOptions
+        );
+    }
+
+    function handleLocationSuccess(position) {
+        telemetry.latitude = position.coords.latitude;
+        telemetry.longitude = position.coords.longitude;
+        telemetry.accuracy = position.coords.accuracy;
+        telemetry.status = "ACQUIRED";
+
+        // Update UI
+        geoSpinner.className = "fa-solid fa-satellite text-success me-1";
+        geoStatusBadge.className = "badge bg-success-subtle text-success-emphasis border border-success-subtle px-3 py-2 fs-7";
+        geoStatusText.textContent = "Live GPS Coordinates Acquired";
+
+        displayLat.textContent = telemetry.latitude.toFixed(6) + "°";
+        displayLng.textContent = telemetry.longitude.toFixed(6) + "°";
+        geoDetailsCard.style.display = "block";
+        geoFallbackAlert.style.display = "none";
+
+        const mapUrl = `https://www.google.com/maps?q=${telemetry.latitude},${telemetry.longitude}`;
+        mapsLinkTag.href = mapUrl;
+        mapsPreviewLink.style.display = "block";
+    }
+
+    function handleLocationError(error, customStatus) {
+        let status = customStatus || "UNAVAILABLE";
+        let detail = "Unable to retrieve device coordinates.";
+
+        if (error) {
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    status = "DENIED";
+                    detail = "Location permission was denied by user. Fallback mode active.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    status = "UNAVAILABLE";
+                    detail = "Location information is unavailable from network/GPS sensors.";
+                    break;
+                case error.TIMEOUT:
+                    status = "TIMEOUT";
+                    detail = "Location request timed out. Fallback mode active.";
+                    break;
+                default:
+                    detail = error.message || detail;
+            }
+        }
+
+        telemetry.latitude = null;
+        telemetry.longitude = null;
+        telemetry.accuracy = null;
+        telemetry.status = status;
+
+        // Update UI for Fallback
+        geoSpinner.className = "fa-solid fa-triangle-exclamation text-warning me-1";
+        geoStatusBadge.className = "badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2 fs-7";
+        geoStatusText.textContent = `Location Status: ${status} (Fallback Active)`;
+
+        fallbackMessage.textContent = detail;
+        geoFallbackAlert.style.display = "block";
+        geoDetailsCard.style.display = "none";
+    }
+
+    // Trigger SOS Alert Dispatch
+    sosTriggerBtn.addEventListener("click", function () {
+        const confirmAlert = confirm("CONFIRM SOS DISPATCH: Are you sure you want to broadcast an emergency distress alert?");
+        if (!confirmAlert) return;
+
+        sosTriggerBtn.disabled = true;
+        sosTriggerBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin fs-1 mb-2"></i><span class="fs-5">TRANSMITTING...</span>';
+
+        const payload = {
+            latitude: telemetry.latitude,
+            longitude: telemetry.longitude,
+            accuracy: telemetry.accuracy,
+            location_status: telemetry.status === "PENDING" ? "UNAVAILABLE" : telemetry.status,
+            emergency_notes: emergencyNotesInput.value.trim()
+        };
+
+        // Send POST request with JSON and CSRF token header
+        fetch("{{ url_for('sos') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+                "Accept": "application/json"
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("HTTP Status " + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Render dispatch confirmation
+            dispatchResultCard.style.display = "block";
+            dispatchContactsList.innerHTML = "";
+
+            if (data.notified_contacts && data.notified_contacts.length > 0) {
+                data.notified_contacts.forEach(contact => {
+                    const item = document.createElement("div");
+                    item.className = "list-group-item d-flex justify-content-between align-items-center py-2";
+                    item.innerHTML = `
+                        <div>
+                            <strong>${contact.name}</strong> (${contact.relationship})
+                            <div class="text-muted small">SMS Gateway Status: <span class="badge bg-success-subtle text-success">Transmitted</span></div>
+                        </div>
+                        <span class="badge bg-light text-dark border">${contact.phone}</span>
+                    `;
+                    dispatchContactsList.appendChild(item);
+                });
+            } else {
+                dispatchContactsList.innerHTML = `
+                    <div class="list-group-item text-muted">
+                        No contacts registered. Alert recorded in system database (Incident #${data.alert_id}).
+                    </div>
+                `;
+            }
+
+            // Scroll to report
+            dispatchResultCard.scrollIntoView({ behavior: "smooth" });
+            sosTriggerBtn.innerHTML = '<i class="fa-solid fa-check fs-1 mb-2"></i><span class="fs-4">ALERT SENT</span>';
+            sosTriggerBtn.classList.remove("sos-big-trigger-btn");
+            sosTriggerBtn.className = "btn btn-success p-4 rounded-circle";
+        })
+        .catch(err => {
+            console.error("AJAX dispatch error, triggering standard form fallback:", err);
+            // Fallback to standard HTTP form post if fetch fails
+            formLat.value = payload.latitude || "";
+            formLng.value = payload.longitude || "";
+            formAcc.value = payload.accuracy || "";
+            formLocationStatus.value = payload.location_status;
+            formNotes.value = payload.emergency_notes;
+            sosFormFallback.submit();
+        });
+    });
+
+    // Start location probe automatically upon page load
+    acquireLocation();
+});
+</script>
+{% endblock %}
+

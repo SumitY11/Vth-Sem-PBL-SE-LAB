@@ -1,0 +1,45 @@
+Issue Type,Issue key,Summary,Description,Priority,Story Points,Epic Name,Epic Link
+Epic,SCRUM-5,EPIC 1: User Authentication & Security,"Core user identity, registration, session management, and credential protection for Women Safety Management System (WSMS).",Highest,,User Authentication & Security,
+Epic,SCRUM-6,EPIC 2: Trusted Emergency Contacts,"Emergency circle CRUD operations, 5-contact quota ceiling, and ownership isolation.",High,,Trusted Emergency Contacts,
+Epic,SCRUM-7,EPIC 3: Geolocation Telemetry & Fallbacks,"W3C HTML5 Geolocation sensor integration, accuracy acquisition, and denial fallback.",Highest,,Geolocation Telemetry & Fallbacks,
+Epic,SCRUM-8,EPIC 4: Emergency SOS Alert Dispatch,"One-tap emergency dispatch button, database persistence, and simulated broadcast to trusted circle.",Highest,,Emergency SOS Alert Dispatch,
+Epic,SCRUM-9,EPIC 5: Dashboard & Incident Audit,"User command center, recent incident history logs, and external mapping links.",Medium,,Dashboard & Incident Audit,
+Epic,SCRUM-10,EPIC 6: Quality Assurance & Documentation,"White-box test suites, functional black-box verification matrix, and PBL project report.",High,,Quality Assurance & Documentation,
+Story,SCRUM-11,User Registration Form Implementation,"Create user registration page with Name, Email, Phone, Password, and Confirm Password fields with CSRF token support.",High,3,,SCRUM-5
+Task,SCRUM-12,Registration Input Validation,"Reject empty fields and passwords under 8 characters with HTTP 400 Bad Request.",High,2,,SCRUM-5
+Task,SCRUM-13,Unique Email Constraint Enforcement,"Inspect SQLite users table and reject duplicate email registrations with user-friendly alerts.",High,2,,SCRUM-5
+Task,SCRUM-14,Secure Password Hashing via Werkzeug,"Encrypt all passwords with PBKDF2:SHA256 salted hashes before storing in SQLite.",Highest,3,,SCRUM-5
+Story,SCRUM-15,User Login & Authentication Flow,"Authenticate credentials against password hash; return generic error on mismatch to prevent account enumeration.",Highest,3,,SCRUM-5
+Task,SCRUM-16,Session Management & Login State,"Establish session cookie with user_id, user_name, and user_email upon login.",High,2,,SCRUM-5
+Task,SCRUM-17,@login_required Route Protection Decorator,"Intercept unauthenticated requests to protected endpoints (/dashboard, /trusted-contacts, /sos) and redirect to /login.",High,3,,SCRUM-5
+Story,SCRUM-18,Secure User Logout,"Clear session variables and redirect user to login page.",Medium,1,,SCRUM-5
+Task,SCRUM-19,CSRF Token Generation in Sessions,"Generate and validate 32-byte cryptographically random CSRF tokens across all form and AJAX POST requests.",Highest,3,,SCRUM-5
+Task,SCRUM-20,Jinja Context Processor for Current User,"Expose authenticated user identity globally across all Jinja2 UI templates.",Low,1,,SCRUM-5
+Story,SCRUM-21,Add Trusted Emergency Contact,"Form enabling users to add emergency contacts with full name, phone number, and relationship.",High,3,,SCRUM-6
+Task,SCRUM-22,Contact Quota Boundary Check (Max 5),"Enforce upper limit of 5 contacts per user at backend controller level.",High,3,,SCRUM-6
+Task,SCRUM-23,UI Contact Quota Counter & Form Disabling,"Display dynamic contact badge (X / 5) and disable input form once limit is reached.",Medium,2,,SCRUM-6
+Task,SCRUM-24,Contact Deletion with Ownership Verification,"Verify contact.user_id matches session user_id; return HTTP 403 Forbidden on mismatch.",Highest,3,,SCRUM-6
+Story,SCRUM-25,View Registered Trusted Contacts List,"Render responsive directory of trusted contacts with phone numbers and relationship badges.",Medium,2,,SCRUM-6
+Task,SCRUM-26,SQLite Schema for trusted_contacts Table,"Define table schema with FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE.",High,2,,SCRUM-6
+Task,SCRUM-27,CSRF Protection for Contact Deletion,"Embed CSRF token in contact deletion forms to prevent cross-site deletion attacks.",High,2,,SCRUM-6
+Story,SCRUM-28,Confirmation Modal on Contact Removal,"Implement JavaScript confirmation dialog before executing contact deletion request.",Low,1,,SCRUM-6
+Task,SCRUM-29,Phone Number Input Masking & Validation,"Validate format of contact phone numbers before database insertion.",Medium,2,,SCRUM-6
+Task,SCRUM-30,Relationship Categories Selection,"Provide structured category choices: Parent, Sibling, Spouse/Partner, Guardian, Friend, Colleague.",Low,1,,SCRUM-6
+Story,SCRUM-31,Browser HTML5 Geolocation API Integration,"Integrate navigator.geolocation.getCurrentPosition with high accuracy enabled upon loading /sos.",Highest,5,,SCRUM-7
+Task,SCRUM-32,Geolocation Error & Fallback Handler,"Detect PERMISSION_DENIED, POSITION_UNAVAILABLE, and TIMEOUT; gracefully switch to fallback mode without crash.",Highest,3,,SCRUM-7
+Task,SCRUM-33,Manual Landmark Input Fallback,"Provide text input field for manual landmark descriptions when GPS coordinates are unavailable.",Medium,2,,SCRUM-7
+Story,SCRUM-34,One-Tap SOS Distress Trigger Button,"Design prominent pulsing emergency button initiating AJAX/form distress dispatch.",Highest,5,,SCRUM-8
+Story,SCRUM-35,Simulated Broadcast to Trusted Contacts,"Query user trusted contacts and generate real-time simulated SMS transmission receipt.",High,3,,SCRUM-8
+Task,SCRUM-36,SQLite Schema for sos_alerts Table,"Define table storing user_id, timestamp, latitude, longitude, accuracy, location_status, and emergency_notes.",High,2,,SCRUM-8
+Story,SCRUM-37,User Safety Dashboard Overview,"Construct dashboard presenting emergency banner, contact counters, and quick distress links.",High,3,,SCRUM-9
+Task,SCRUM-38,Recent SOS Incident Logs & Map Links,"Render table of 5 latest SOS incidents with status badges and external Google Maps links.",Medium,2,,SCRUM-9
+Task,SCRUM-39,Global @verify_csrf Request Interceptor,"Implement decorator checking CSRF token from form body or X-CSRFToken header.",Highest,5,,SCRUM-5
+Task,SCRUM-40,Constant-Time CSRF Token Comparison,"Use secrets.compare_digest to prevent side-channel timing attacks.",High,2,,SCRUM-5
+Task,SCRUM-41,SQLite Foreign Key Cascade Enforcement,"Ensure PRAGMA foreign_keys = ON is executed on each database connection.",High,2,,SCRUM-6
+Task,SCRUM-42,Sub-Second Latency Optimization,"Optimize database queries and JSON payloads for emergency dispatch route.",Medium,2,,SCRUM-8
+Test,SCRUM-43,White-Box Unittest Suite (test_white_box.py),"Automated test client suite verifying 20 code paths covering validation, CSRF, login, and fallbacks.",High,5,,SCRUM-10
+Test,SCRUM-44,Black-Box Functional Test Matrix,"Structured 10 test case matrix covering positive, negative, and boundary scenarios.",High,3,,SCRUM-10
+Task,SCRUM-45,PBL Final Project Report (Project_Report.md),"Comprehensive IEEE-style academic report detailing requirements, architecture, and schema.",High,5,,SCRUM-10
+Task,SCRUM-46,Responsive CSS Styling & Pulsing Animations,"Custom CSS theme with responsive Bootstrap layout and pulsing animations for SOS trigger.",Medium,3,,SCRUM-10
+Task,SCRUM-47,National Emergency Hotline Banner Integration,"Header banner providing 24/7 National Emergency Hotline (112 / 1091) across all pages.",Low,1,,SCRUM-10
+

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Women Safety Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="brand-icon-box mx-auto mb-2" style="width: 50px; height: 50px; font-size: 1.5rem;">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">Create an Account</h3>
+                    <p class="text-muted small">Register for continuous safety networking and one-click SOS alerts</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('register') }}" novalidate>
+                    <!-- CSRF Protection Token -->
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label fw-semibold small">Full Name <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-solid fa-user text-muted"></i></span>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ name or '' }}" placeholder="e.g., Jane Doe" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label fw-semibold small">Email Address <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-solid fa-envelope text-muted"></i></span>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ email or '' }}" placeholder="jane.doe@example.com" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="phone" class="form-label fw-semibold small">Primary Phone Number <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-solid fa-phone text-muted"></i></span>
+                            <input type="tel" class="form-control" id="phone" name="phone" value="{{ phone or '' }}" placeholder="+1 234 567 8900" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label fw-semibold small">Password <span class="text-danger">*</span> <span class="text-muted fw-normal">(min 8 characters)</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-solid fa-lock text-muted"></i></span>
+                            <input type="password" class="form-control" id="password" name="password" minlength="8" placeholder="Create strong password" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="confirm_password" class="form-label fw-semibold small">Confirm Password <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-solid fa-lock-check text-muted"></i></span>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" minlength="8" placeholder="Re-enter password" required>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary bg-purple-dark border-0 py-2 fw-semibold">
+                            <i class="fa-solid fa-user-check me-2"></i> Register Account
+                        </button>
+                    </div>
+
+                    <div class="text-center small text-muted">
+                        Already have an account? <a href="{{ url_for('login') }}" class="fw-semibold text-decoration-none">Sign In</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

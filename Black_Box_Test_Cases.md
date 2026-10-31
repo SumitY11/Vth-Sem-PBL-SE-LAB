@@ -1,0 +1,33 @@
+# Black-Box Test Suite: Women Safety Management System (WSMS)
+
+**Project:** Women Safety Management System (WSMS)  
+**Academic Reference:** Project-Based Learning (PBL) - Software Engineering (Sem 5)  
+**Test Methodology:** Black-Box / Functional & Behavioral Testing (Equivalence Partitioning, Boundary Value Analysis, Security Path Testing)  
+**Testing Environment:** Flask Test Server, Chrome 128 / Firefox 130, SQLite 3  
+
+---
+
+### Functional Test Execution Matrix (TC-01 to TC-10)
+
+| Test ID | Test Scenario | Input Data | Expected Output | Actual Output | Status |
+| :--- | :--- | :--- | :--- | :--- | :---: |
+| **TC-01** | **Valid User Registration**<br>Verify that a user can successfully register with complete, unique, and valid information. | **Name:** `"Aanya Sharma"`<br>**Email:** `"aanya.sharma@example.com"`<br>**Phone:** `"+919876543210"`<br>**Password:** `"SecureP@ss2026"`<br>**Confirm Password:** `"SecureP@ss2026"` | System persists user record with hashed password, redirects to `/login` route, and displays success flash: *"Registration successful! Please log in to your account."* | Account registered; password stored as PBKDF2 hash; redirected to `/login` with success banner. | **PASS** |
+| **TC-02** | **Boundary Check: Weak Password Length**<br>Verify registration rejection when password length is below the mandatory 8-character threshold. | **Name:** `"Riya Sen"`<br>**Email:** `"riya.sen@example.com"`<br>**Phone:** `"+919811122233"`<br>**Password:** `"Safe1"` (5 chars)<br>**Confirm Password:** `"Safe1"` | Form submission is rejected with HTTP 400 Bad Request; displays flash alert: *"Password must be at least 8 characters in length."* No database record created. | HTTP 400 returned; form rejected with error message *"Password must be at least 8 characters in length."* | **PASS** |
+| **TC-03** | **Data Integrity: Duplicate Email Check**<br>Verify that system prevents duplicate account creation with an already registered email. | **Name:** `"Aanya Duplicate"`<br>**Email:** `"aanya.sharma@example.com"`<br>**Phone:** `"+919999900000"`<br>**Password:** `"Password123!"`<br>**Confirm Password:** `"Password123!"` | System detects duplicate email, halts transaction, returns HTTP 400, and displays warning: *"An account with this email address already exists."* | HTTP 400 returned; warning message displayed; database uniqueness constraint preserved. | **PASS** |
+| **TC-04** | **Security: Invalid Login Handling**<br>Verify generic error response on invalid password to prevent account enumeration / timing attacks. | **Email:** `"aanya.sharma@example.com"`<br>**Password:** `"IncorrectPassword123"` | System denies authentication with HTTP 401 Unauthorized; displays generic flash: *"Invalid email or password. Please verify your credentials."* No session created. | HTTP 401 Unauthorized; generic error alert rendered; no internal credential clues exposed. | **PASS** |
+| **TC-05** | **Access Control: Unauthorized Protected Route Access**<br>Verify that unauthenticated visitors attempting to access `/dashboard` or `/sos` are redirected. | **Request URL:** `GET /dashboard`<br>**Session:** Unauthenticated (`session['user_id'] = None`) | System intercepts request via `@login_required` decorator, redirects (HTTP 302) to `/login?next=/dashboard`, and displays: *"Please log in to access this feature."* | HTTP 302 redirect triggered to `/login`; user guided to authenticate before accessing dashboard. | **PASS** |
+| **TC-06** | **Boundary Check: Add Trusted Contact Within Limit**<br>Verify user can add trusted emergency contacts when current count is `< 5`. | **Contact Name:** `"Dr. Rajesh Sharma"`<br>**Phone:** `"+919876500001"`<br>**Relationship:** `"Parent"`<br>**User Context:** Authenticated User (0 existing contacts) | Record inserted into `trusted_contacts` table linked to `user_id`; page reloads with success notice: *"Trusted contact 'Dr. Rajesh Sharma' successfully added."* | Contact record created in SQLite with user ownership; contact count displays 1 / 5. | **PASS** |
+| **TC-07** | **Boundary Enforcement: Exceeding Max 5 Contacts Limit**<br>Verify system blocks the addition of a 6th contact when 5 contacts already exist. | **Contact Name:** `"Emergency Sixth Contact"`<br>**Phone:** `"+919876599999"`<br>**Relationship:** `"Friend"`<br>**User Context:** User already has 5 active contacts | Application rejects insertion; displays warning: *"Maximum limit reached. You can only maintain up to 5 trusted contacts."* Database remains capped at 5 records. | Form submission blocked; flash warning shown; contact count remains strictly 5 / 5. | **PASS** |
+| **TC-08** | **Authorization Check: Cross-User Resource Protection**<br>Verify that User B cannot delete a trusted contact owned by User A. | **Request:** `POST /trusted-contacts/delete/1`<br>**Session User:** User ID `2`<br>**Target Contact Ownership:** Belongs to User ID `1` | System performs ownership validation (`contact.user_id == session['user_id']`); detects mismatch and returns HTTP 403 Forbidden. Contact is not deleted. | HTTP 403 Forbidden returned; foreign key and ownership check halts malicious deletion. | **PASS** |
+| **TC-09** | **Core Workflow: SOS Alert with Live GPS Acquired**<br>Verify that triggering SOS with browser geolocation permission granted stores coordinates and active status. | **Action:** Click "SEND SOS"<br>**Geolocation Telemetry:** `Lat: 28.6139`, `Lng: 77.2090`, `Accuracy: 8.5m`<br>**Status:** `ACQUIRED`<br>**Notes:** `"Walking towards library"` | System persists alert record in `sos_alerts` table with `user_id`, timestamp, GPS coordinates, and status `'ACQUIRED'`. Returns dispatch confirmation with contact list. | JSON 200 OK returned; alert stored in DB with coordinates `28.6139, 77.2090`; UI displays live dispatch report. | **PASS** |
+| **TC-10** | **Resilience: SOS Alert with Geolocation Denied / Fallback**<br>Verify that triggering SOS when browser permission is denied triggers fallback gracefully. | **Action:** Click "SEND SOS"<br>**Browser Permission:** Denied (`error.PERMISSION_DENIED`)<br>**Status:** `DENIED`<br>**Notes:** `"Station exit 2 - Need immediate patrol"` | System catches denial; sets `latitude=NULL`, `longitude=NULL`, and `location_status='DENIED'`; stores alert and notes in DB; triggers dispatch simulation without crash. | HTTP 200 OK; alert recorded in DB with `location_status='DENIED'` and notes preserved; contacts alerted. | **PASS** |
+
+---
+
+### Test Execution Summary
+- **Total Test Cases Executed:** 10
+- **Passed:** 10 (100%)
+- **Failed:** 0 (0%)
+- **Critical Defects:** 0
+- **Regression Risk:** Low
+

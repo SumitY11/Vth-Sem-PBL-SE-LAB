@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}WSMS - Women Safety Management System{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head_extra %}{% endblock %}
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- Emergency Hotline Banner -->
+    <div class="top-hotline-banner py-1 text-center small text-white">
+        <div class="container d-flex justify-content-between align-items-center flex-wrap">
+            <span><i class="fa-solid fa-phone-volume me-1"></i> <strong>24/7 National Emergency Helpline:</strong> 112 | Women Helpline: 1091</span>
+            <span class="d-none d-md-inline"><i class="fa-solid fa-shield-heart me-1"></i> Project-Based Learning (PBL) Prototype</span>
+        </div>
+    </div>
+
+    <!-- Navigation Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-purple-dark sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ url_for('dashboard') if current_user else url_for('login') }}">
+                <span class="brand-icon-box me-2"><i class="fa-solid fa-person-shelter"></i></span>
+                <span>WSMS <span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-1 fs-8">Safety Shield</span></span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+                    {% if current_user %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                                <i class="fa-solid fa-gauge-high me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/trusted-contacts' %}active{% endif %}" href="{{ url_for('trusted_contacts') }}">
+                                <i class="fa-solid fa-address-book me-1"></i> Trusted Contacts
+                            </a>
+                        </li>
+                        <li class="nav-item my-2 my-lg-0">
+                            <a class="btn btn-danger btn-sm px-3 pulse-btn fw-bold text-uppercase d-inline-flex align-items-center" href="{{ url_for('sos') }}">
+                                <i class="fa-solid fa-triangle-exclamation me-2 animate-bounce"></i> Trigger SOS
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown ms-lg-2">
+                            <a class="nav-link dropdown-toggle text-light d-flex align-items-center gap-2" href="#" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="avatar-circle">{{ current_user.name[:1] | upper }}</span>
+                                <span class="d-none d-lg-inline">{{ current_user.name }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="userMenu">
+                                <li class="dropdown-header">Signed in as<br><strong>{{ current_user.email }}</strong></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="fa-solid fa-right-from-bracket me-2"></i> Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/login' %}active{% endif %}" href="{{ url_for('login') }}">
+                                <i class="fa-solid fa-right-to-bracket me-1"></i> Sign In
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-outline-light btn-sm ms-lg-2" href="{{ url_for('register') }}">
+                                <i class="fa-solid fa-user-plus me-1"></i> Create Account
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Notifications Container -->
+    <main class="flex-shrink-0 container py-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="row justify-content-center">
+                    <div class="col-12 col-lg-10">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show shadow-sm d-flex align-items-center" role="alert">
+                                {% if category == 'success' %}
+                                    <i class="fa-solid fa-circle-check fs-5 me-2 text-success"></i>
+                                {% elif category == 'danger' or category == 'error' %}
+                                    <i class="fa-solid fa-triangle-exclamation fs-5 me-2 text-danger"></i>
+                                {% elif category == 'warning' %}
+                                    <i class="fa-solid fa-circle-exclamation fs-5 me-2 text-warning"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-circle-info fs-5 me-2 text-primary"></i>
+                                {% endif %}
+                                <div class="flex-grow-1">{{ message }}</div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Main Page Content Block -->
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 bg-dark text-secondary border-top border-secondary-subtle">
+        <div class="container text-center">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 small">
+                <span>&copy; {{ current_year or 2026 }} Women Safety Management System (WSMS) &bull; Academic PBL Project</span>
+                <span>Designed for immediate emergency dispatch, trusted contact networking & geolocation tracking.</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+

@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Women Safety Management System{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Welcome Header & Panic Quick Action -->
+    <div class="col-12">
+        <div class="card bg-purple-dark text-white p-4 shadow-sm border-0 position-relative overflow-hidden">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <span class="badge bg-white text-dark mb-2 px-3 py-1 fw-semibold"><i class="fa-solid fa-shield-halved text-danger me-1"></i> Emergency Protection Active</span>
+                    <h2 class="fw-bold mb-2">Hello, {{ current_user.name }}</h2>
+                    <p class="text-white-50 mb-3 mb-lg-0">
+                        In an emergency, click the SOS button immediately. Your geolocation coordinates and alert signals will be transmitted to your registered trusted contacts.
+                    </p>
+                </div>
+                <div class="col-lg-4 text-lg-end text-center">
+                    <a href="{{ url_for('sos') }}" class="btn btn-danger btn-lg px-4 py-3 fw-bold pulse-btn shadow">
+                        <i class="fa-solid fa-triangle-exclamation me-2 fs-5"></i> TRIGGER SOS NOW
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body d-flex align-items-center">
+                <div class="rounded-circle p-3 bg-primary-subtle text-primary me-3 fs-4">
+                    <i class="fa-solid fa-user-group"></i>
+                </div>
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">Trusted Contacts</span>
+                    <h3 class="fw-bold mb-0">{{ contact_count }} <span class="fs-6 text-muted fw-normal">/ {{ max_contacts }}</span></h3>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-0 pt-0 pb-3">
+                <a href="{{ url_for('trusted_contacts') }}" class="small fw-semibold text-decoration-none">
+                    Manage Contacts <i class="fa-solid fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body d-flex align-items-center">
+                <div class="rounded-circle p-3 bg-danger-subtle text-danger me-3 fs-4">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">Recent Alerts Triggered</span>
+                    <h3 class="fw-bold mb-0">{{ recent_alerts | length }}</h3>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-0 pt-0 pb-3">
+                <span class="small text-muted">Real-time database persistence</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body d-flex align-items-center">
+                <div class="rounded-circle p-3 bg-success-subtle text-success me-3 fs-4">
+                    <i class="fa-solid fa-satellite-dish"></i>
+                </div>
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">GPS Fallback Mode</span>
+                    <h5 class="fw-bold mb-0 text-success">Enabled</h5>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-0 pt-0 pb-3">
+                <span class="small text-muted">HTML5 Geolocation & Offline Fallback</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Trusted Contacts Overview -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0"><i class="fa-solid fa-users me-2 text-primary"></i>Trusted Circle</h5>
+                <a href="{{ url_for('trusted_contacts') }}" class="btn btn-outline-primary btn-sm rounded-pill">
+                    <i class="fa-solid fa-plus me-1"></i> Add Contact
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if contacts %}
+                    <ul class="list-group list-group-flush">
+                        {% for c in contacts %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-3 px-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle me-3 bg-light text-dark border">
+                                        {{ c.contact_name[:1] | upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ c.contact_name }}</div>
+                                        <div class="small text-muted"><i class="fa-solid fa-phone me-1"></i>{{ c.contact_phone }}</div>
+                                    </div>
+                                </div>
+                                <span class="badge bg-secondary-subtle text-secondary border px-2 py-1">{{ c.relationship }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="fa-solid fa-user-slash fs-1 text-secondary opacity-50 mb-2"></i>
+                        <p class="mb-2">No trusted contacts configured yet.</p>
+                        <a href="{{ url_for('trusted_contacts') }}" class="btn btn-primary btn-sm bg-purple-dark border-0">Add your first contact</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent SOS Incident Logs -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0"><i class="fa-solid fa-clock-rotate-left me-2 text-danger"></i>Recent SOS Incidents</h5>
+                <span class="badge bg-light text-dark border">Latest 5 Logs</span>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_alerts %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light small text-muted">
+                                <tr>
+                                    <th>Timestamp (UTC)</th>
+                                    <th>Status</th>
+                                    <th>Coordinates</th>
+                                    <th>Notes / Map</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for alert in recent_alerts %}
+                                    <tr>
+                                        <td class="small fw-semibold">{{ alert.timestamp }}</td>
+                                        <td>
+                                            {% if alert.location_status == 'ACQUIRED' %}
+                                                <span class="badge badge-status-acquired">GPS Acquired</span>
+                                            {% elif alert.location_status == 'DENIED' %}
+                                                <span class="badge badge-status-denied">GPS Denied (Fallback)</span>
+                                            {% else %}
+                                                <span class="badge badge-status-pending">{{ alert.location_status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="small">
+                                            {% if alert.latitude and alert.longitude %}
+                                                <code>{{ "%.4f"|format(alert.latitude) }}, {{ "%.4f"|format(alert.longitude) }}</code>
+                                            {% else %}
+                                                <span class="text-muted fst-italic">Unavailable</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if alert.latitude and alert.longitude %}
+                                                <a href="https://www.google.com/maps?q={{ alert.latitude }},{{ alert.longitude }}" target="_blank" class="btn btn-outline-danger btn-sm py-0 px-2" title="View on Google Maps">
+                                                    <i class="fa-solid fa-map-location-dot me-1"></i> Map
+                                                </a>
+                                            {% elif alert.emergency_notes %}
+                                                <span class="small text-muted" title="{{ alert.emergency_notes }}">
+                                                    {{ alert.emergency_notes[:20] }}{% if alert.emergency_notes|length > 20 %}...{% endif %}
+                                                </span>
+                                            {% else %}
+                                                <span class="small text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="fa-solid fa-shield-check fs-1 text-success opacity-50 mb-2"></i>
+                        <p class="mb-0">No SOS alerts recorded yet. Stay safe!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

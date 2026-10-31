@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Trusted Contacts - Women Safety Management System{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Header Summary -->
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pb-2 border-bottom">
+            <div>
+                <h3 class="fw-bold mb-1"><i class="fa-solid fa-address-book text-primary me-2"></i>Trusted Emergency Contacts</h3>
+                <p class="text-muted small mb-0">These individuals will receive your emergency broadcast and live GPS coordinates when you trigger SOS.</p>
+            </div>
+            <div class="text-end">
+                <span class="badge {% if current_count >= max_contacts %}bg-danger{% else %}bg-purple-dark{% endif %} p-2 px-3 fs-6">
+                    {{ current_count }} / {{ max_contacts }} Contacts Configured
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Contact Column -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h5 class="fw-bold mb-0"><i class="fa-solid fa-user-plus text-success me-2"></i>Add New Contact</h5>
+            </div>
+            <div class="card-body p-4">
+                {% if current_count >= max_contacts %}
+                    <div class="alert alert-warning d-flex align-items-center mb-0" role="alert">
+                        <i class="fa-solid fa-circle-exclamation fs-4 me-3 text-warning"></i>
+                        <div>
+                            <strong>Contact Limit Reached:</strong> You have reached the maximum allowed limit of {{ max_contacts }} trusted contacts. Remove an existing contact before adding a new one.
+                        </div>
+                    </div>
+                {% else %}
+                    <form method="POST" action="{{ url_for('add_trusted_contact') }}">
+                        <!-- CSRF Token -->
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="mb-3">
+                            <label for="contact_name" class="form-label fw-semibold small">Contact Full Name <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fa-solid fa-user text-muted"></i></span>
+                                <input type="text" class="form-control" id="contact_name" name="contact_name" placeholder="e.g., Mom, Sarah Jenkins" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="contact_phone" class="form-label fw-semibold small">Phone Number (with Country Code) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fa-solid fa-phone text-muted"></i></span>
+                                <input type="tel" class="form-control" id="contact_phone" name="contact_phone" placeholder="+1 555-0199" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="relationship" class="form-label fw-semibold small">Relationship <span class="text-danger">*</span></label>
+                            <select class="form-select" id="relationship" name="relationship" required>
+                                <option value="" selected disabled>Select Relationship</option>
+                                <option value="Parent">Parent</option>
+                                <option value="Sibling">Sibling</option>
+                                <option value="Spouse/Partner">Spouse / Partner</option>
+                                <option value="Guardian">Guardian</option>
+                                <option value="Friend">Friend</option>
+                                <option value="Colleague">Colleague</option>
+                                <option value="Neighbor">Neighbor</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary bg-purple-dark border-0 py-2 fw-semibold">
+                                <i class="fa-solid fa-plus-circle me-1"></i> Save Trusted Contact
+                            </button>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Existing Contacts List Column -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0"><i class="fa-solid fa-list-check text-primary me-2"></i>Active Contacts ({{ contacts|length }})</h5>
+                <span class="small text-muted">Strict Ownership Verification</span>
+            </div>
+            <div class="card-body p-0">
+                {% if contacts %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light small text-muted">
+                                <tr>
+                                    <th>Contact</th>
+                                    <th>Phone</th>
+                                    <th>Relationship</th>
+                                    <th class="text-end pe-3">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contact in contacts %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-circle me-2 bg-purple-dark text-white" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                                    {{ contact.contact_name[:1] | upper }}
+                                                </div>
+                                                <span class="fw-semibold">{{ contact.contact_name }}</span>
+                                            </div>
+                                        </td>
+                                        <td><code>{{ contact.contact_phone }}</code></td>
+                                        <td><span class="badge bg-light text-dark border">{{ contact.relationship }}</span></td>
+                                        <td class="text-end pe-3">
+                                            <form method="POST" action="{{ url_for('delete_trusted_contact', contact_id=contact.id) }}" onsubmit="return confirm('Are you sure you want to remove {{ contact.contact_name }} from your trusted contacts?');" class="d-inline">
+                                                <!-- CSRF Token -->
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete Contact">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="p-5 text-center text-muted">
+                        <i class="fa-solid fa-user-group fs-1 text-secondary opacity-25 mb-3"></i>
+                        <h5>No Contacts Registered</h5>
+                        <p class="small text-muted mb-0">Please add at least one trusted contact to ensure emergency alerts can be dispatched.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
